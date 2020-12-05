@@ -25,6 +25,10 @@ Priority:
 #include <stack>
 #include <string>
 
+void help ()
+{
+}
+
 void process (std::string& str)
 {
     int pos = 0;
@@ -99,7 +103,6 @@ float pop (std::vector<float>& vec)
 
 float own_round (float a)
 {
-    //if (a - std::round(a) < 0.00001 || std::round(a) - a > -0.00001) //abs doesn't work
     if (fabs(a - std::round(a)) < 0.00001)
         return std::round(a);
     else return a;
@@ -107,77 +110,94 @@ float own_round (float a)
 
 void calc (std::vector<float>& st, char oper)
 {
-    float b = pop (st), a;
+    float a,b;
 
-    if (is_oper(oper))
-        a = pop (st);
-
-    switch (oper)
+    if (st.size() == 0)
     {
-        case '+':
-            st.push_back(own_round(a + b));
-            break;
-        
-        case '-':
-            st.push_back(own_round(a - b));
-            break;
+        std::cout << "Error! Value not found\n";
 
-        case '*':
-            st.push_back(own_round(a * b));
-            break;
+    } else {
 
-        case '/':
-            st.push_back(own_round(a/b));
-            break;
+        b = pop (st), a;
 
-        case '^':
-            st.push_back(own_round(pow(a,b)));
-            break;
+        if (is_oper(oper))
+            a = pop (st);
 
-        case 's':
-            st.push_back(own_round(sin(b)));
-            break;
+        switch (oper)
+        {
+            case '+':
+                st.push_back(own_round(a + b));
+                break;
 
-        case 'c':
-            st.push_back(own_round(cos(b)));
-            break;
+            case '-':
+                st.push_back(own_round(a - b));
+                break;
 
-        case 't':
-            st.push_back(own_round(tan(b)));
-            break;
+            case '*':
+                st.push_back(own_round(a * b));
+                break;
 
-        case 'g': 
-            st.push_back(own_round(pow(tan(b), -1)));
-            break;
+            case '/':
+                st.push_back(own_round(a/b));
+                break;
 
-        case 'n': 
-            st.push_back(own_round(exp(b)));
-            break;
+            case '^':
+                st.push_back(own_round(pow(a,b)));
+                break;
 
-        case 'q':
-            st.push_back(own_round(std::sqrt(b)));
-            break;
+            case 's':
+                st.push_back(own_round(sin(b)));
+                break;
+
+            case 'c':
+                st.push_back(own_round(cos(b)));
+                break;
+
+            case 't':
+                st.push_back(own_round(tan(b)));
+                break;
+
+            case 'g': 
+                st.push_back(own_round(pow(tan(b), -1)));
+                break;
+
+            case 'n': 
+                st.push_back(own_round(exp(b)));
+                break;
+
+            case 'q':
+                st.push_back(own_round(std::sqrt(b)));
+                break;
+        }
 
     }
 }
 
 int main ()
 {
+
+START:
+
     while (true)
     {
         bool un_flag = true;
-        bool is_x = false;
+        int op_par = 0, cl_par = 0;
         std::vector <char> oper;
         std::vector <char> out;
         std::string str;
+
         std::cout << "> ";
         std::getline(std::cin, str);
 
         if (str == "quit" || str == "q")
             break;
 
+        if (str == "help" || str == "h")
+            help();
+
         process(str);
 
+        //Starting of coverting to reverse polish notation
         for (int i = 0; i < str.size(); i++)
         {
             if (str[i] == ' ');
@@ -189,13 +209,19 @@ int main ()
                         out.push_back('-');
                         out.push_back(str[i]);
 
+                } else if (str[i] == 'x')
+                {
+                    std::string x;
+                    std::cout << "Please, enter a value of x: ";
+                    std::cin >> x;
+                    std::cin.ignore(1000, '\n');
+                    for (int j = 0; j < x.size(); j++)
+                        out.push_back(x[j]);
+
                 } else out.push_back(str[i]);
 
-                if (str[i] == 'x')
-                    is_x = true;
-
                 if (str[i+1] == ')' || is_oper(str[i+1]) || i == str.size() - 1 || str[i+1] == ' ')
-                    out.push_back(',');                     //ending of a number
+                    out.push_back(','); //ending of a number
 
                 un_flag = false;
 
@@ -213,17 +239,25 @@ int main ()
             {
                 oper.push_back(str[i]);
                 un_flag = true;
+                op_par++;
 
             } else if (str[i] == ')')
             {
                 while (oper.back() != '(')
                 {
+                    if (oper.size() == 0)
+                    {
+                        std::cout << "Error. Value not found\n";
+                        goto START;
+                    }
+
                     out.push_back(oper.back());
                     out.push_back(',');
                     oper.pop_back();
                 }
                 oper.pop_back();
                 un_flag = false;
+                cl_par++;
 
                 if (is_pref_func(oper.back()))
                 {
@@ -253,26 +287,12 @@ int main ()
             out.push_back(',');
             oper.pop_back();
         }
+        //Endfinr RPN
 
-        if ( is_x ) // inserting of x
+        if (op_par != cl_par)
         {
-            std::string x;
-            std::cout << "Please, enter a value of x: ";
-            std::cin >> x;
-
-            auto it = out.begin();
-            while (*it != 'x')
-                ++it;
-
-            out.erase(it);
-
-            if (x == "pi")
-            {
-                x = "p";
-            }
-
-            for (int i = x.size() - 1; i >= 0; i--)
-               out.insert(it, x[i]); 
+            std::cout << "Error! Missing parantheses\n";
+            goto START;
         }
 
         for (auto x : out)
@@ -302,7 +322,14 @@ int main ()
                 else if (num == "e")
                     st.push_back(M_E);
                 else
-                    st.push_back(std::stof(num));
+                {
+                    try {
+                        st.push_back(std::stof(num));
+                    } catch (...) {
+                        std::cout << "Error in sytax\n";
+                        goto START;
+                    }
+                }
 
                 num.clear();
 
@@ -313,11 +340,8 @@ int main ()
                 calc(st, out[i]);
         }
 
-        std::cout << "Answer: " << st[0] << std::endl;
-
-        is_x = false;
-        //out.clear();
-        //oper.clear();
+        if (st.size() > 0)
+            std::cout << "-> " << st[0] << std::endl;
     }
 
     return 0;
