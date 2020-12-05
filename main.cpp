@@ -27,6 +27,7 @@ Priority:
 
 void help ()
 {
+    std::cout << "Some kind of documentation\n";
 }
 
 void process (std::string& str)
@@ -193,7 +194,10 @@ START:
             break;
 
         if (str == "help" || str == "h")
+        {
             help();
+            continue;
+        }
 
         process(str);
 
@@ -295,10 +299,12 @@ START:
             goto START;
         }
 
+        /*
         for (auto x : out)
             std::cout << x;
 
         std::cout << std::endl;
+        */
 
         //Calculating
         
