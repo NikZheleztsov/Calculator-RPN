@@ -5,7 +5,7 @@ cos  = c
 tg   = t
 ctg  = g
 exp  = n
-sqrt = q
+sqrt = r
 pi   = p
 e    = e
 
@@ -27,7 +27,13 @@ Priority:
 
 void help ()
 {
-    std::cout << "Some kind of documentation\n";
+    std::cout << "\nCalc - a command line calculator utility,\n";
+    std::cout << "which supports brackets and such operations\n";
+    std::cout << "as +, -, *, /, sin(), cos(), tg(), ctg(), exp(),\n";
+    std::cout << "sqrt(), constants pi and 'e' and also a variable x\n";
+    std::cout << "(one value, not an expression!) Please, pay attention\n";
+    std::cout << "to the syntax of the program! Otherwise, program's behavior \n";
+    std::cout << "is undefined) Enter 'q' in order to exit program\n\n";
 }
 
 void process (std::string& str)
@@ -58,13 +64,17 @@ void process (std::string& str)
     pos = 0;
     while ((pos = str.find("sqrt", pos)) != -1)
     {
-        str.erase(pos, 1);
-        str.erase(pos + 1, 2);
+        str.erase(pos, 2);
+        str.erase(pos + 1, 1);
     }
 
     pos = 0;
     while ((pos = str.find("pi", pos)) != -1)
         str.erase(pos + 1, 1);
+
+    pos = 0;
+    while ((pos = str.find(' ', pos)) != -1)
+        str.erase(pos, 1);
 }
 
 bool is_number(char a)
@@ -74,7 +84,7 @@ bool is_number(char a)
 
 bool is_pref_func(char a)
 {
-    return (a == 's' || a == 'c' || a == 't' || a == 'g' || a == 'n' || a == 'q');
+    return (a == 's' || a == 'c' || a == 't' || a == 'g' || a == 'n' || a == 'r');
 }
 
 bool is_oper (char a)
@@ -166,7 +176,7 @@ void calc (std::vector<float>& st, char oper)
                 st.push_back(own_round(exp(b)));
                 break;
 
-            case 'q':
+            case 'r':
                 st.push_back(own_round(std::sqrt(b)));
                 break;
         }
@@ -176,37 +186,29 @@ void calc (std::vector<float>& st, char oper)
 
 int main ()
 {
+    std::cout << "Calc\nq - exit, h - help\n\n";
+    std::string str;
 
-START:
-
-    while (true)
-    {
+    while (str != "q")
+     {
         bool un_flag = true;
         int op_par = 0, cl_par = 0;
         std::vector <char> oper;
         std::vector <char> out;
-        std::string str;
 
         std::cout << "> ";
         std::getline(std::cin, str);
 
-        if (str == "quit" || str == "q")
-            break;
-
-        if (str == "help" || str == "h")
-        {
+        if (str == "h" || str == "help")
             help();
-            continue;
-        }
 
         process(str);
+        std::cout << str << std::endl;
 
         //Starting of coverting to reverse polish notation
         for (int i = 0; i < str.size(); i++)
         {
-            if (str[i] == ' ');
-
-            else if (is_number(str[i]))
+            if (is_number(str[i]))
             {
                 if (un_flag && str[i-1] == '-')
                 {
@@ -224,14 +226,21 @@ START:
 
                 } else out.push_back(str[i]);
 
-                if (str[i+1] == ')' || is_oper(str[i+1]) || i == str.size() - 1 || str[i+1] == ' ')
+                if (str[i+1] == ')' || is_oper(str[i+1]) || i == str.size() - 1 || str[i+1] == ' ' || str[i+1] == '(' || is_pref_func(str[i+1]))
                     out.push_back(','); //ending of a number
+
+                if ((str[i+1] == '(') || (str[i-1] == ')')) //*
+                    oper.push_back('*');
 
                 un_flag = false;
 
             } else if (is_pref_func(str[i]))
             {
+                if (is_number(str[i-1]) || str[i-1] == ')') //*
+                    oper.push_back('*');
+
                 oper.push_back(str[i]);
+
                 un_flag = false;
 
             } else if (str[i] == '.')
@@ -241,33 +250,37 @@ START:
 
             } else if (str[i] == '(')
             {
+                if (str[i-1] == ')') // *
+                    oper.push_back('*');
+
                 oper.push_back(str[i]);
                 un_flag = true;
                 op_par++;
 
             } else if (str[i] == ')')
             {
-                while (oper.back() != '(')
+                if (oper.size() != 0)
                 {
-                    if (oper.size() == 0)
+                    while (oper.back() != '(')
                     {
-                        std::cout << "Error. Value not found\n";
-                        goto START;
+                        out.push_back(oper.back());
+                        out.push_back(',');
+                        oper.pop_back();
+                    }
+                    oper.pop_back();
+                    un_flag = false;
+                    cl_par++;
+
+                    if (is_pref_func(oper.back()))
+                    {
+                        out.push_back(oper.back());
+                        out.push_back(',');
+                        oper.pop_back();
                     }
 
-                    out.push_back(oper.back());
-                    out.push_back(',');
-                    oper.pop_back();
-                }
-                oper.pop_back();
-                un_flag = false;
-                cl_par++;
-
-                if (is_pref_func(oper.back()))
-                {
-                    out.push_back(oper.back());
-                    out.push_back(',');
-                    oper.pop_back();
+                } else {
+                    std::cout << "Error. Value not found\n";
+                    break; // )))) не goto
                 }
 
             } else if (is_oper(str[i]) && !un_flag)
@@ -296,15 +309,13 @@ START:
         if (op_par != cl_par)
         {
             std::cout << "Error! Missing parantheses\n";
-            goto START;
+            continue;
         }
 
-        /*
         for (auto x : out)
             std::cout << x;
 
         std::cout << std::endl;
-        */
 
         //Calculating
         
@@ -317,7 +328,7 @@ START:
                 std::string num;
 
                 int a = 0;
-                while (out[i] != ',')
+                while (out[i] != ',' && a < out.size())
                 {
                     num.push_back(out[i]);
                     a++; i++;
@@ -333,7 +344,7 @@ START:
                         st.push_back(std::stof(num));
                     } catch (...) {
                         std::cout << "Error in sytax\n";
-                        goto START;
+                        break;
                     }
                 }
 
@@ -348,7 +359,8 @@ START:
 
         if (st.size() > 0)
             std::cout << "-> " << st[0] << std::endl;
-    }
+
+    } 
 
     return 0;
 }
