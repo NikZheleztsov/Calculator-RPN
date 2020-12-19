@@ -203,7 +203,6 @@ int main ()
             help();
 
         process(str);
-        std::cout << str << std::endl;
 
         //Starting of coverting to reverse polish notation
         for (int i = 0; i < str.size(); i++)
@@ -220,6 +219,14 @@ int main ()
                     std::string x;
                     std::cout << "Please, enter a value of x: ";
                     std::cin >> x;
+
+                    int pos = 0; // spaces
+                    while ((pos = x.find(' ', pos)) != -1)
+                        x.erase(pos, 1);
+
+                    if (x == "pi")
+                        x = "p";
+                   
                     std::cin.ignore(1000, '\n');
                     for (int j = 0; j < x.size(); j++)
                         out.push_back(x[j]);
@@ -312,10 +319,12 @@ int main ()
             continue;
         }
 
+        /*
         for (auto x : out)
             std::cout << x;
 
         std::cout << std::endl;
+        */
 
         //Calculating
         
