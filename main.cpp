@@ -186,11 +186,11 @@ void calc (std::vector<float>& st, char oper)
 
 int main ()
 {
-    std::cout << "Calc\nq - exit, h - help\n\n";
     std::string str;
 
     while (str != "q")
-     {
+    {
+        bool err_flag = false;
         bool un_flag = true;
         int op_par = 0, cl_par = 0;
         std::vector <char> oper;
@@ -211,8 +211,8 @@ int main ()
             {
                 if (un_flag && str[i-1] == '-')
                 {
-                        out.push_back('-');
-                        out.push_back(str[i]);
+                    out.push_back('-');
+                    out.push_back(str[i]);
 
                 } else if (str[i] == 'x')
                 {
@@ -226,7 +226,7 @@ int main ()
 
                     if (x == "pi")
                         x = "p";
-                   
+
                     std::cin.ignore(1000, '\n');
                     for (int j = 0; j < x.size(); j++)
                         out.push_back(x[j]);
@@ -268,8 +268,17 @@ int main ()
             {
                 if (oper.size() != 0)
                 {
+                    int count = 0;
                     while (oper.back() != '(')
                     {
+                        count++;
+                        if (count > oper.size())
+                        {
+                            std::cout << "Error in syntax\n";
+                            err_flag = true;
+                            break;
+                        }
+
                         out.push_back(oper.back());
                         out.push_back(',');
                         oper.pop_back();
@@ -287,7 +296,7 @@ int main ()
 
                 } else {
                     std::cout << "Error. Value not found\n";
-                    break; // )))) не goto
+                    break; // не goto, хотя оно мне нравилось больше)
                 }
 
             } else if (is_oper(str[i]) && !un_flag)
@@ -305,7 +314,7 @@ int main ()
             }
         }   
 
-        while (oper.size() != 0)
+        while (oper.size() != 0 && !err_flag)
         {
             out.push_back(oper.back());
             out.push_back(',');
@@ -316,58 +325,63 @@ int main ()
         if (op_par != cl_par)
         {
             std::cout << "Error! Missing parantheses\n";
+            err_flag = true;
             continue;
         }
 
         /*
-        for (auto x : out)
-            std::cout << x;
+           for (auto x : out)
+           std::cout << x;
 
-        std::cout << std::endl;
-        */
+           std::cout << std::endl;
+           */
 
         //Calculating
-        
-        std::vector <float> st;
 
-        for (int i = 0; i < out.size(); i++)
+        if (!err_flag)
         {
-            if (is_number(out[i]) || (out[i] == '-' && (out[i-1] == ',' || i == 0) && out[i+1] != ','))
+            std::vector <float> st;
+
+            for (int i = 0; i < out.size(); i++)
             {
-                std::string num;
-
-                int a = 0;
-                while (out[i] != ',' && a < out.size())
+                if (is_number(out[i]) || (out[i] == '-' && (out[i-1] == ',' || i == 0) && out[i+1] != ','))
                 {
-                    num.push_back(out[i]);
-                    a++; i++;
-                }
+                    std::string num;
 
-                if (num == "p")
-                    st.push_back(M_PI);
-                else if (num == "e")
-                    st.push_back(M_E);
-                else
-                {
-                    try {
-                        st.push_back(std::stof(num));
-                    } catch (...) {
-                        std::cout << "Error in sytax\n";
-                        break;
+                    int a = 0;
+                    while (out[i] != ',' && a < out.size())
+                    {
+                        num.push_back(out[i]);
+                        a++; i++;
                     }
-                }
 
-                num.clear();
+                    if (num == "p")
+                        st.push_back(M_PI);
+                    else if (num == "e")
+                        st.push_back(M_E);
+                    else
+                    {
+                        try {
+                            st.push_back(std::stof(num));
+                        } catch (...) {
+                            std::cout << "Error in sytax\n";
+                            err_flag = true;
+                            break;
+                        }
+                    }
 
-            } else if (is_oper(out[i]))
-                calc(st, out[i]);
-            
-            else if (is_pref_func(out[i]))
-                calc(st, out[i]);
+                    num.clear();
+
+                } else if (is_oper(out[i]))
+                    calc(st, out[i]);
+
+                else if (is_pref_func(out[i]))
+                    calc(st, out[i]);
+            }
+
+            if (st.size() > 0)
+                std::cout << "-> " << st[0] << std::endl;
         }
-
-        if (st.size() > 0)
-            std::cout << "-> " << st[0] << std::endl;
 
     } 
 
