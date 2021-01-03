@@ -129,10 +129,18 @@ void calc (std::vector<float>& st, char oper)
 
     } else {
 
-        b = pop (st), a;
+        b = pop (st);
 
         if (is_oper(oper))
+        {
+            if (st.size() == 0)
+            {
+                std::cout << "Error! Value not found\n";
+                return;
+            }
+
             a = pop (st);
+        }
 
         switch (oper)
         {
@@ -193,6 +201,7 @@ int main ()
         bool err_flag = false;
         bool un_flag = true;
         int op_par = 0, cl_par = 0;
+        int point_num = 0;
         std::vector <char> oper;
         std::vector <char> out;
 
@@ -200,190 +209,221 @@ int main ()
         std::getline(std::cin, str);
 
         if (str == "h" || str == "help")
+        {
             help();
+            err_flag = 1;
+        }
 
-        process(str);
-
-        //Starting of coverting to reverse polish notation
-        for (int i = 0; i < str.size(); i++)
+        if (!err_flag && (str.size() != 0))
         {
-            if (is_number(str[i]))
+            process(str);
+
+            //Starting of coverting to reverse polish notation
+            for (int i = 0; i < str.size() && !err_flag; i++)
             {
-                if (un_flag && str[i-1] == '-')
+                if (is_number(str[i]))
                 {
-                    out.push_back('-');
-                    out.push_back(str[i]);
-
-                } else if (str[i] == 'x')
-                {
-                    std::string x;
-                    std::cout << "Please, enter a value of x: ";
-                    std::cin >> x;
-
-                    int pos = 0; // spaces
-                    while ((pos = x.find(' ', pos)) != -1)
-                        x.erase(pos, 1);
-
-                    if (x == "pi")
-                        x = "p";
-
-                    std::cin.ignore(1000, '\n');
-                    for (int j = 0; j < x.size(); j++)
-                        out.push_back(x[j]);
-
-                } else out.push_back(str[i]);
-
-                if (str[i+1] == ')' || is_oper(str[i+1]) || i == str.size() - 1 || str[i+1] == ' ' || str[i+1] == '(' || is_pref_func(str[i+1]))
-                    out.push_back(','); //ending of a number
-
-                if ((str[i+1] == '(') || (str[i-1] == ')')) //*
-                    oper.push_back('*');
-
-                un_flag = false;
-
-            } else if (is_pref_func(str[i]))
-            {
-                if (is_number(str[i-1]) || str[i-1] == ')') //*
-                    oper.push_back('*');
-
-                oper.push_back(str[i]);
-
-                un_flag = false;
-
-            } else if (str[i] == '.')
-            {
-                out.push_back(str[i]);
-                un_flag = false;
-
-            } else if (str[i] == '(')
-            {
-                if (str[i-1] == ')') // *
-                    oper.push_back('*');
-
-                oper.push_back(str[i]);
-                un_flag = true;
-                op_par++;
-
-            } else if (str[i] == ')')
-            {
-                if (oper.size() != 0)
-                {
-                    int count = 0;
-                    while (oper.back() != '(')
+                    if (un_flag && ((i == 0) ? 0 : (str[i-1] == '-')))
                     {
-                        count++;
-                        if (count > oper.size())
-                        {
-                            std::cout << "Error in syntax\n";
-                            err_flag = true;
-                            break;
-                        }
+                        out.push_back('-');
+                        out.push_back(str[i]);
 
-                        out.push_back(oper.back());
-                        out.push_back(',');
-                        oper.pop_back();
+                    } else if (str[i] == 'x')
+                    {
+                        std::string x;
+                        std::cout << "Please, enter a value of x: ";
+                        std::cin >> x;
+
+                        int pos = 0; // spaces
+                        while ((pos = x.find(' ', pos)) != -1)
+                            x.erase(pos, 1);
+
+                        if (x == "pi")
+                            x = "p";
+
+                        std::cin.ignore(1000, '\n');
+                        for (int j = 0; j < x.size(); j++)
+                            out.push_back(x[j]);
+
+                    } else out.push_back(str[i]);
+
+                    if (i == str.size() - 1)
+                    {
+                        out.push_back(','); //ending of a number
+                        point_num = 0;
+
+                    } else if (str[i+1] == ')' || is_oper(str[i+1]) || str[i+1] == ' ' || str[i+1] == '(' || is_pref_func(str[i+1]))
+                    {
+                        out.push_back(','); //ending of a number
+                        point_num = 0;
                     }
-                    oper.pop_back();
+
+                    if ( ((i == str.size() - 1) ? 0 : (str[i+1] == '(')) || ((i == 0) ? 0 : (str[i-1] == ')'))) //*
+                        oper.push_back('*');
+
                     un_flag = false;
-                    cl_par++;
 
-                    if (is_pref_func(oper.back()))
-                    {
-                        out.push_back(oper.back());
-                        out.push_back(',');
-                        oper.pop_back();
-                    }
-
-                } else {
-                    std::cout << "Error. Value not found\n";
-                    break; // не goto, хотя оно мне нравилось больше)
-                }
-
-            } else if (is_oper(str[i]) && !un_flag)
-            {
-                if (oper.size() != 0)
+                } else if (is_pref_func(str[i]))
                 {
-                    while (is_less_or_eq_prior(str[i], oper.back()))
-                    {
-                        out.push_back(oper.back());
-                        out.push_back(',');
-                        oper.pop_back();
-                    }
-                }
-                oper.push_back(str[i]);
-            }
-        }   
+                    if (i != 0)
+                        if (is_number(str[i-1]) || str[i-1] == ')') //*
+                            oper.push_back('*');
 
-        while (oper.size() != 0 && !err_flag)
-        {
-            out.push_back(oper.back());
-            out.push_back(',');
-            oper.pop_back();
-        }
-        //Endfinr RPN
+                    oper.push_back(str[i]);
 
-        if (op_par != cl_par)
-        {
-            std::cout << "Error! Missing parantheses\n";
-            err_flag = true;
-            continue;
-        }
+                    un_flag = false;
 
-        /*
-           for (auto x : out)
-           std::cout << x;
-
-           std::cout << std::endl;
-           */
-
-        //Calculating
-
-        if (!err_flag)
-        {
-            std::vector <float> st;
-
-            for (int i = 0; i < out.size(); i++)
-            {
-                if (is_number(out[i]) || (out[i] == '-' && (out[i-1] == ',' || i == 0) && out[i+1] != ','))
+                } else if (str[i] == '.')
                 {
-                    std::string num;
-
-                    int a = 0;
-                    while (out[i] != ',' && a < out.size())
-                    {
-                        num.push_back(out[i]);
-                        a++; i++;
-                    }
-
-                    if (num == "p")
-                        st.push_back(M_PI);
-                    else if (num == "e")
-                        st.push_back(M_E);
-                    else
-                    {
-                        try {
-                            st.push_back(std::stof(num));
-                        } catch (...) {
-                            std::cout << "Error in sytax\n";
-                            err_flag = true;
+                    if (out.size() != 0)
+                        if (out.back() == '.' || point_num > 1)
+                        {
+                            std::cout << "Error! Several points in one number\n";
+                            err_flag = 1;
                             break;
                         }
+
+                    out.push_back(str[i]);
+                    un_flag = false;
+                    point_num++;
+
+                } else if (str[i] == '(')
+                {
+                    if (i != 0)
+                        if (str[i-1] == ')') // *
+                            oper.push_back('*');
+
+                    oper.push_back(str[i]);
+                    un_flag = true;
+                    op_par++;
+
+                } else if (str[i] == ')' && ((op_par == 0) ? (err_flag = 1, 
+                           std::cout << "Error! Missing parantheses\n", 0) : 1))
+                {
+                    if (oper.size() != 0)
+                    {
+                        int count = 0;
+                        while (oper.back() != '(')
+                        {
+                            count++;
+                            if (count > oper.size())
+                            {
+                                std::cout << "Error in syntax\n";
+                                err_flag = true;
+                                break;
+                            }
+
+                            out.push_back(oper.back());
+                            out.push_back(',');
+                            oper.pop_back();
+                        }
+                        oper.pop_back();
+                        un_flag = false;
+                        cl_par++;
+
+                        if (oper.size() != 0)
+                            if (is_pref_func(oper.back()))
+                            {
+                                out.push_back(oper.back());
+                                out.push_back(',');
+                                oper.pop_back();
+                            }
+
+                    } else {
+                        std::cout << "Error. Value not found\n";
+                        break; 
                     }
 
-                    num.clear();
+                } else if (is_oper(str[i]) && !un_flag)
+                {
+                    if (oper.size() != 0)
+                    {
+                        while (is_less_or_eq_prior(str[i], oper.back()))
+                        {
+                            out.push_back(oper.back());
+                            out.push_back(',');
+                            oper.pop_back();
+                        }
+                    }
+                    oper.push_back(str[i]);
+                }
+            }   
 
-                } else if (is_oper(out[i]))
-                    calc(st, out[i]);
-
-                else if (is_pref_func(out[i]))
-                    calc(st, out[i]);
+            if (op_par != cl_par)
+            {
+                std::cout << "Error! Missing parantheses\n";
+                err_flag = true;
+                continue;
             }
 
-            if (st.size() > 0)
-                std::cout << "-> " << st[0] << std::endl;
-        }
+            while (oper.size() != 0 && !err_flag)
+            {
+                out.push_back(oper.back());
+                out.push_back(',');
+                oper.pop_back();
+            }
 
-    } 
+            /*
+               for (auto x : out)
+               std::cout << x;
+
+               std::cout << std::endl;
+               */
+
+            //Calculating
+
+            if (!err_flag)
+            {
+                std::vector <float> st;
+
+                for (int i = 0; i < out.size(); i++)
+                {
+                    //if (is_number(out[i]) || (out[i] == '-' && (out[i-1] == ',' || i == 0) && out[i+1] != ','))
+                    if (is_number(out[i]) || (out[i] == '-' && ((i == 0) ? 1 : (out[i-1] ==',')) 
+                                          && ((i == (out.size() - 1)) ? 0 : (out[i+1] != ','))))
+                    {
+                        std::string num;
+
+                        int a = 0;
+                        while (out[i] != ',')
+                        {
+                            num.push_back(out[i]);
+                            a++; i++;
+
+                            if (a >= out.size())
+                                break;
+                        }
+
+                        if (num == "p")
+                            st.push_back(M_PI);
+                        else if (num == "e")
+                            st.push_back(M_E);
+                        else
+                        {
+                            try {
+                                st.push_back(std::stof(num));
+                            } catch (...) {
+                                std::cout << "Error in sytax\n";
+                                err_flag = true;
+                                break;
+                            }
+                        }
+
+                        num.clear();
+
+                    } else if (is_oper(out[i]))
+                        calc(st, out[i]);
+
+                    else if (is_pref_func(out[i]))
+                        calc(st, out[i]);
+                }
+
+                if (st.size() > 0)
+                    std::cout << "-> " << st[0] << std::endl;
+            }
+
+        } 
+    }
 
     return 0;
 }
