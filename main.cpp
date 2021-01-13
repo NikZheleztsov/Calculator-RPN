@@ -200,8 +200,8 @@ int main ()
     {
         bool err_flag = false;
         bool un_flag = true;
-        int op_par = 0, cl_par = 0;
-        int point_num = 0;
+        int op_par = 0, cl_par = 0,
+        point_num = 0, num_of_x = 0;
         std::vector <char> oper;
         std::vector <char> out;
 
@@ -230,8 +230,9 @@ int main ()
 
                     } else if (str[i] == 'x')
                     {
+                        num_of_x++;
                         std::string x;
-                        std::cout << "Please, enter a value of x: ";
+                        std::cout << "Please, enter a value of x (" << num_of_x << ") : ";
                         std::cin >> x;
 
                         int pos = 0; // spaces
@@ -343,6 +344,9 @@ int main ()
                             out.push_back(oper.back());
                             out.push_back(',');
                             oper.pop_back();
+
+                            if (oper.size() == 0)
+                                break;
                         }
                     }
                     oper.push_back(str[i]);
