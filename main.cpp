@@ -53,7 +53,7 @@ void process (std::string& str)
     pos = 0;
     while ((pos = str.find("tg", pos)) != -1)
         str.erase(pos + 1, 1);
-    
+
     pos = 0;
     while ((pos = str.find("exp", pos)) != -1)
     {
@@ -75,6 +75,14 @@ void process (std::string& str)
     pos = 0;
     while ((pos = str.find(' ', pos)) != -1)
         str.erase(pos, 1);
+
+    pos = 0;
+    while ((pos = str.find("--", pos)) != -1)
+        str.replace(pos, 2, "+");
+
+    pos = 0;
+    while ((pos = str.find("--", pos)) != -1)
+        str.replace(pos, 2, "+");
 }
 
 bool is_number(char a)
@@ -130,6 +138,12 @@ void calc (std::vector<float>& st, char oper)
     } else {
 
         b = pop (st);
+
+        if (oper == '-' && st.size() == 0)
+        {
+            st.push_back(own_round(-b));
+            return;
+        }
 
         if (is_oper(oper))
         {
@@ -201,7 +215,7 @@ int main ()
         bool err_flag = false;
         bool un_flag = true;
         int op_par = 0, cl_par = 0,
-        point_num = 0, num_of_x = 0;
+            point_num = 0, num_of_x = 0;
         std::vector <char> oper;
         std::vector <char> out;
 
@@ -299,7 +313,7 @@ int main ()
                     op_par++;
 
                 } else if (str[i] == ')' && ((op_par == 0) ? (err_flag = 1, 
-                           std::cout << "Error! Missing parantheses\n", 0) : 1))
+                            std::cout << "Error! Missing parantheses\n", 0) : 1))
                 {
                     if (oper.size() != 0)
                     {
@@ -335,21 +349,30 @@ int main ()
                         break; 
                     }
 
-                } else if (is_oper(str[i]) && !un_flag)
+                } else if (is_oper(str[i])) // fixes
                 {
-                    if (oper.size() != 0)
+                    if (!un_flag)
                     {
-                        while (is_less_or_eq_prior(str[i], oper.back()))
+                        if (oper.size() != 0)
                         {
-                            out.push_back(oper.back());
-                            out.push_back(',');
-                            oper.pop_back();
+                            while (is_less_or_eq_prior(str[i], oper.back()))
+                            {
+                                out.push_back(oper.back());
+                                out.push_back(',');
+                                oper.pop_back();
 
-                            if (oper.size() == 0)
-                                break;
+                                if (oper.size() == 0)
+                                    break;
+                            }
                         }
+
+                        oper.push_back(str[i]);
+
+                    } else {
+                        if (i != (str.size() - 1))
+                            if (str[i + 1] == '(')
+                                oper.push_back(str[i]);
                     }
-                    oper.push_back(str[i]);
                 }
             }   
 
@@ -384,7 +407,7 @@ int main ()
                 {
                     //if (is_number(out[i]) || (out[i] == '-' && (out[i-1] == ',' || i == 0) && out[i+1] != ','))
                     if (is_number(out[i]) || (out[i] == '-' && ((i == 0) ? 1 : (out[i-1] ==',')) 
-                                          && ((i == (out.size() - 1)) ? 0 : (out[i+1] != ','))))
+                                && ((i == (out.size() - 1)) ? 0 : (out[i+1] != ','))))
                     {
                         std::string num;
 
