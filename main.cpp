@@ -79,10 +79,6 @@ void process (std::string& str)
     pos = 0;
     while ((pos = str.find("--", pos)) != -1)
         str.replace(pos, 2, "+");
-
-    pos = 0;
-    while ((pos = str.find("--", pos)) != -1)
-        str.replace(pos, 2, "+");
 }
 
 bool is_number(char a)
